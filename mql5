@@ -1,0 +1,81 @@
+
+// Program Name: OGNSFA System
+// Developer's Site: forexroboteasy.com
+// Development Name: Forex Robot Easy Team
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <Neuro\Neuro.mqh>
+
+// Define constants
+#define MIN_DEPOSIT 5000
+#define CURRENCY_PAIRS 7
+
+// Initialize global variables
+CTrade trade;
+CNeuro neuro;
+
+// Function to initialize the OGNSFA System
+void OnInit()
+{
+   // Check if the account balance meets the minimum deposit requirement
+   if(AccountInfoDouble(ACCOUNT_BALANCE) < MIN_DEPOSIT)
+   {
+      Print('Minimum deposit of $', MIN_DEPOSIT, ' required for the OGNSFA System.');
+      ExpertRemove();
+      return;
+   }
+   
+   // Load neural networks for analysis
+   neuro.LoadNetworks();
+   
+   // Set currency pairs for trading
+   trade.SetCurrencyPairs(CURRENCY_PAIRS);
+   
+   // Set cent account compatibility
+   trade.SetCentAccount(true);
+   
+   // Set trading time customization
+   trade.SetTradingTime(8, 16); // Trading from 8:00 to 16:00
+   
+   // Set broker spread optimization
+   trade.SetSpreadOptimization(true);
+   
+   Print('OGNSFA System initialized successfully.');
+}
+
+// Function to handle trading decisions based on neural network analysis
+void OnTick()
+{
+   // Get market data for analysis
+   MqlRates rates[];
+   CopyRates(_Symbol, PERIOD_CURRENT, 0, 10, rates);
+   
+   // Analyze market data using neural networks
+   double prediction = neuro.Predict(rates);
+   
+   // Make trading decision based on prediction
+   if(prediction > 0.5)
+   {
+      trade.Buy();
+   }
+   else if(prediction < -0.5)
+   {
+      trade.Sell();
+   }
+   
+   // Check for open trades and manage them
+   trade.ManageTrades();
+   
+   // Check for account balance and manage it
+   trade.ManageAccountBalance();
+}
+
+// Function to clean up and exit the OGNSFA System
+void OnDeinit(const int reason)
+{
+   // Close any open trades
+   trade.CloseAllTrades();
+   
+   Print('OGNSFA System terminated.');
+}
